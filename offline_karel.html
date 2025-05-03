@@ -4,9 +4,18 @@
         <title>Offline Karel (one file Karel)</title>
         <style>
             textarea {
+                padding-left: .2em;
                 white-space: pre;
                 overflow-wrap: normal;
                 overflow-x: scroll;
+            }
+            canvas {
+                image-rendering: optimizeSpeed;
+                image-rendering: crisp-edges;
+                image-rendering: -moz-crisp-edges;
+                image-rendering: -o-crisp-edges;
+                image-rendering: -webkit-optimize-contrast;
+                -ms-interpolation-mode: nearest-neighbor;
             }
             #popup_div {
                 display:none;
@@ -236,11 +245,70 @@
                             dir: constants.right
                         }
                     }
+                ],
+                "midpoint" : [
+                    {
+                        dims: [6, 6],
+                        field0: [
+                            "000000",
+                            "000000",
+                            "000000",
+                            "000000",
+                            "000000",
+                            "000000"
+                        ],
+                        field1: [
+                            "000000",
+                            "000000",
+                            "000000",
+                            "000000",
+                            "000000",
+                            "001000"
+                        ],
+                        karel0: {
+                            col: 0,
+                            row: 0,
+                            dir: constants.right
+                        },
+                        karel1: {
+                            col: 2,
+                            row: 0,
+                            dir: constants.right
+                        }
+                    }
+                ],
+                "sorter" : [
+                    {
+                        dims: [6, 4],
+                        field0: [
+                            "000000",
+                            "000000",
+                            "000000",
+                            "024010"
+                        ],
+                        field1: [
+                            "000000",
+                            "000000",
+                            "000000",
+                            "000124"
+                        ],
+                        karel0: {
+                            col: 0,
+                            row: 0,
+                            dir: constants.right
+                        },
+                        karel1: {
+                            col: 2,
+                            row: 0,
+                            dir: constants.right
+                        }
+                    }
                 ]
             }
 
             let settings = {
-                auto_indent: true
+                auto_indent: true,
+                mouse_action: "toggle"
             }
 
             function setup_field(karel, grid) {
@@ -305,8 +373,8 @@
             let style = styles[Object.keys(styles)[0]]
             let timeout_ms = 500
             // dimensions of the world
-            let cols = 15
-            let rows = 6
+            let cols = 7
+            let rows = 4
             var canv, ctx
             function setup_state() {
                 function push_code_stack(line) {
@@ -589,9 +657,14 @@
                     refresh()
                 }
                 function run_fast_forward() {
-                    for(let limit = 10000; limit > 0; limit--) {
-                        if(run_forward()) break
+                    for(let limit = 100000; limit > 0; limit--) {
+                        if(run_forward()) {
+                            // either an error, or normal completion?
+                            refresh()
+                            return
+                        }
                     }
+                    error("Too many steps, you might have an infinite loop")
                     refresh()
                 }
                 function run_play() {
@@ -989,25 +1062,25 @@
                     return karel.dir == constants.up
                 }
                 else if(test == "not_facing_north") {
-                    return karel.dir == !constants.up
+                    return karel.dir !== constants.up
                 }
                 else if(test == "facing_south") {
                     return karel.dir == constants.down
                 }
                 else if(test == "not_facing_south") {
-                    return karel.dir == !constants.down
+                    return karel.dir !== constants.down
                 }
                 else if(test == "facing_east") {
                     return karel.dir == constants.right
                 }
                 else if(test == "not_facing_east") {
-                    return karel.dir == !constants.right
+                    return karel.dir !== constants.right
                 }
                 else if(test == "facing_west") {
                     return karel.dir == constants.left
                 }
                 else if(test == "not_facing_west") {
-                    return karel.dir == !constants.left
+                    return karel.dir !== constants.left
                 }
 // //beepers_in_bag()	no_beepers_in_bag()	Does Karel have any beepers in its bag?
             }
@@ -1020,7 +1093,13 @@
             }
             function click_box(col, row) {
                 let grid = state.field.grid.grid_data
-                if(grid[row][col] > 0) {
+                if (settings.mouse_action == "add") {
+                    grid[row][col] += 1
+                }
+                else if (settings.mouse_action == "toggle" && grid[row][col] > 0) {
+                    grid[row][col] -= 1
+                }
+                else if(grid[row][col] > 0) {
                     grid[row][col] = 0
                 }
                 else {
@@ -1090,7 +1169,7 @@
             }
             function setup() {
                 canv = document.getElementById("canv1")
-                ctx = canv.getContext("2d");
+                ctx = canv.getContext("2d")
                 
                 ctx.imageSmoothingEnabled = false
 
@@ -1210,7 +1289,7 @@
                     else if(e.key == "Enter") {
                         if (settings.auto_indent && ta1.selectionStart == ta1.selectionEnd) {
                             let pos = ta1.selectionStart
-                            const spaceRegex = /([\ \t]*)\S+$/
+                            const spaceRegex = /\n([\ \t]*)[^\n]+$/
                             let matches = spaceRegex.exec(ta1.value.slice(0, pos))
                             if (matches.length > 1) {
                                 e.preventDefault()
@@ -1447,6 +1526,9 @@
             function indent_toggle() {
                 settings.auto_indent = document.getElementById("indenter").checked
             }
+            function set_mouse_action() {
+                settings.mouse_action = document.getElementById("mouse_action").value
+            }
             
         </script>
         <table id="tab1" style="width:100%;height:100%">
@@ -1455,7 +1537,7 @@
                     <textarea id="ta1" style="width: 100%; height: 100%; display: block;" onblur="blurs()" onfocus="edit_code()" onchange="change_code()"></textarea>
                 </td>
                 <td>
-                    <canvas id="canv1" width="1080" height="432" style="width:100%;height:100%;border:2px solid #000000;"></canvas>
+                    <canvas id="canv1" width="1080" height="432" style="float:right;width:99%;height:100%;border:2px solid #000000;"></canvas>
                 </td>
             </tr>
         </tbody></table>
@@ -1487,13 +1569,21 @@
             <option value="none">no challenge</option>
             <option value="hospital">hospital</option>
             <option value="spread">spread</option>
+            <option value="midpoint">midpoint</option>
+            <option value="sorter">sorter</option>
         </select>
         <label for="fps_field">FPS</label>
         <input type="number" id="fps_field" name="fps_field" onchange="change_fps()" min="1" max="1000" value="30">
         <label for="row_field">rows</label>
-        <input type="number" id="row_field" name="row_field" onchange="change_rows()" min="1" max="100" value="7">
+        <input type="number" id="row_field" name="row_field" onchange="change_rows()" min="1" max="100" value="4">
         <label for="col_field">cols</label>
-        <input type="number" id="col_field" name="col_field" onchange="change_cols()" min="1" max="100" value="15">
+        <input type="number" id="col_field" name="col_field" onchange="change_cols()" min="1" max="100" value="7">
+
+        <label for="mouse_action">Click to:</label>
+        <select name="mouse_action" id="mouse_action" onchange="set_mouse_action()">
+            <option value="toggle">toggle beeper</option>
+            <option value="add">add beeper</option>
+        </select>
         <input type="checkbox" onchange="warning_toggle()" id="warn" name="warn" checked="">
         <label for="warn">Error popups</label>
         <input type="checkbox" onchange="indent_toggle()" id="indenter" name="indenter" checked="">
