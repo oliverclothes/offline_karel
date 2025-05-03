@@ -239,6 +239,10 @@
                 ]
             }
 
+            let settings = {
+                auto_indent: true
+            }
+
             function setup_field(karel, grid) {
                 return {
                     karel: karel,
@@ -627,10 +631,13 @@
                         }
                     }
                     
+                    function is_space(c) {
+                        return c == " " || c == "\t"
+                    }
                     // changed from jumps to stack implementation
                     let spaces = state.code.unparsed.map((line) => {
                         let sps = 0
-                        while(sps < line.length && line[sps] == " ") {
+                        while(sps < line.length && is_space(line[sps])) {
                             sps++
                         }
                         return sps
@@ -664,7 +671,11 @@
                     for(let i = 0; i < state.code.unparsed.length; i++) {
                         let line = state.code.unparsed[i].trim()
                         let index = line.length - 2
-                        if(line.substring(index) == "()" && constants.functions[line.substring(0, index)]) {
+                        
+                        if(line == "" || line.startsWith("#")) {
+                            res = {type: "noop"}
+                        }
+                        else if(line.substring(index) == "()" && constants.functions[line.substring(0, index)]) {
                             if(constants.functions[line.substring(0, index)]) {
                                 res = {type: "call", id: line.substring(0, index)}
                             }
@@ -713,9 +724,6 @@
                         else if(line.endsWith("()")) {
                             let id = line.substring(0, line.length - 2)
                             res = {type: "fcall", id: id}
-                        }
-                        else if(line == "") {
-                            res = {type: "noop"}
                         }
                         else {
                             res = {type: "error"}
@@ -1020,7 +1028,7 @@
                 }
                 refresh()
             }
-            function type_char(str) {
+            function hotkey(str) {
                 if(str == "w") {
                     execute_call("pick_beeper")
                 }
@@ -1093,18 +1101,132 @@
                     click_box(col, row)
                 })
 
+                // keypress everywhere but text area
                 onkeypress = function(e) {
                     e = e || window.event
                     var charCode = (typeof e.which == "number") ? e.which : e.keyCode
+                    
                     if (charCode > 0) {
-                        type_char(String.fromCharCode(charCode))
+                        hotkey(String.fromCharCode(charCode))
                     }
                 }
 
+                function insertAtCursor(myField, myValue) {
+                    if (myField.selectionStart || myField.selectionStart == '0') {
+                        var startPos = myField.selectionStart;
+                        var endPos = myField.selectionEnd;
+                        myField.value = myField.value.substring(0, startPos)
+                            + myValue
+                            + myField.value.substring(endPos, myField.value.length);
+                    }
+                    else {
+                        myField.value += myValue;
+                    }
+                }
+
+                
+                function tab_out(ta) {
+                    //MOZILLA and others
+                    if (ta.selectionStart || ta.selectionStart == '0') {
+                        let pre0 = ta.value.slice(0, ta.selectionStart)
+                        let post = ta.value.slice(ta.selectionEnd)
+                        let mid0 = ta.value.slice(ta.selectionStart, ta.selectionEnd)
+                        if (pre0.indexOf("\n") < 0) {
+                            pre1 = "\t" + pre0
+                        }
+                        else {
+                            pre1 = pre0.split("\n").slice(0, -1).join("\n") + "\n\t" + pre0.split("\n").slice(-1)[0]
+                        }
+                        if (mid0 == "") {
+                            pre1 = pre0
+                            mid1 = "\t"
+                            ta.value = pre1 + mid1 + post
+                            ta.setSelectionRange(pre1.length + mid1.length , pre1.length + mid1.length)
+                        }
+                        // else if (mid0.indexOf("\n") < 0) {
+                        //     mid1 = "\t"
+                        //     ta.value = pre1 + mid1 + post
+                        //     ta.setSelectionRange(pre1.length + mid1.length , pre1.length + mid1.length)
+                        // }
+                        else {
+                            mid1 = mid0.split("\n").join("\n\t")
+                            ta.value = pre1 + mid1 + post
+                            ta.setSelectionRange(pre1.length, pre1.length + mid1.length)
+                        }
+                        // if (mid0 == "") {
+                        //     pre1 = pre0
+                        //     mid1 = "\t"
+                        //     ta.value = pre1 + mid1 + post
+                        //     ta.setSelectionRange(pre1.length + mid1.length , pre1.length + mid1.length)
+                        // }
+                        // else {
+                        //     pre1 = pre0.split("\n").slice(0, -1).join("\n") + "\n\t" + pre0.split("\n").slice(-1)[0]
+                        //     mid1 = mid0.split("\n").join("\n\t")
+                        //     ta.value = pre1 + mid1 + post
+                        //     ta.setSelectionRange(pre1.length, pre1.length + mid1.length)
+                        // }
+                    } else {
+                        ta.value += "\t"
+                    }
+                }
+
+                function tab_in(ta) {
+                    function tab_remover(str) {
+                        if (str.startsWith("\t")) {
+                            return str.slice(1)
+                        }
+                        return str
+                    }
+                    let pre = ta.value.substring(0, ta.selectionStart).split("\n")                 
+                    let mid = ta.value.substring(ta.selectionStart, ta.selectionEnd).split("\n")
+                    if (pre.length == 1) {
+                        pre1 = tab_remover(pre[0])
+                    }  
+                    else {
+                        pre1 = pre.slice(0, -1).join("\n") + "\n" + tab_remover(pre.slice(-1)[0])  
+                    }  
+                    if (mid.length == 1) {
+                        mid1 = mid[0]
+                    }
+                    else {
+                        mid1 = mid[0] +"\n" + mid.slice(1).map(tab_remover).join("\n")
+                    }
+                    ta.value = pre1 + mid1 + ta.value.substring(ta.selectionEnd)
+                    ta.setSelectionRange(pre1.length, pre1.length + mid1.length)
+                }
+
                 let ta1 = document.getElementById("ta1")
+                ta1.style.tabSize = "2"
+                ta1.onkeydown = function(e) {
+                    if (e.key == "Tab") {
+                        e.preventDefault()
+                        if (e.shiftKey) {
+                            tab_in(ta1)
+                        }
+                        else {
+                            tab_out(ta1)
+                        }
+                    }
+                    else if(e.key == "Enter") {
+                        if (settings.auto_indent && ta1.selectionStart == ta1.selectionEnd) {
+                            let pos = ta1.selectionStart
+                            const spaceRegex = /([\ \t]*)\S+$/
+                            let matches = spaceRegex.exec(ta1.value.slice(0, pos))
+                            if (matches.length > 1) {
+                                e.preventDefault()
+                                let ws = matches[1]
+                                ta1.value = ta1.value.slice(0, pos) + "\n" + ws + ta1.value.slice(pos)
+                                ta1.setSelectionRange(pos + ws.length + 1, pos + ws.length + 1)
+                            }
+                        }
+                    }
+
+                }
                 ta1.onkeypress = function(e) {
+                    console.log(e)
                     e.stopPropagation()
                 }
+
 
                 let ss = document.getElementById("style_switcher")
                 ss.innerHTML = Object.keys(styles).map((id) => '<option value="' + id + '">' + id + '</option>').join("\n")
@@ -1113,6 +1235,9 @@
                 change_tab()
                 change_fps()
                 change_style()
+                
+                ta1.value = "# calls main\nmain()\n\ndef main():\n\tmove()"
+                change_code()
             }
 
             function update_ui_to_field() {
@@ -1317,8 +1442,12 @@
                 document.getElementById("message_div").style.display = "none"
             }
             function warning_toggle() {
-                error_popup_on = !error_popup_on
+                error_popup_on = document.getElementById("warn").checked
             }
+            function indent_toggle() {
+                settings.auto_indent = document.getElementById("indenter").checked
+            }
+            
         </script>
         <table id="tab1" style="width:100%;height:100%">
             <tbody><tr>
@@ -1367,6 +1496,8 @@
         <input type="number" id="col_field" name="col_field" onchange="change_cols()" min="1" max="100" value="15">
         <input type="checkbox" onchange="warning_toggle()" id="warn" name="warn" checked="">
         <label for="warn">Error popups</label>
+        <input type="checkbox" onchange="indent_toggle()" id="indenter" name="indenter" checked="">
+        <label for="indenter">Keep indent</label>
         <div id="popup_div" onclick="close_popup()"></div>
         <div id="message_div" onclick="close_popup()">bone</div>
     
