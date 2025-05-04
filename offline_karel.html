@@ -8,6 +8,10 @@
                 white-space: pre;
                 overflow-wrap: normal;
                 overflow-x: scroll;
+
+                width: 100%;
+                height: 100%;
+                display: block;
             }
             #canvas_holder {
                 overflow: hidden;
@@ -54,9 +58,12 @@
     </head>
     <body onload="setup()">
         <script>
+            const tab_size = 2
             let error_popup_on = true
 
             const constants = {
+                tab_size: tab_size,
+                tab_space_string: Array(tab_size + 1).join(" "),
                 max_rows: 100,
                 max_cols: 100,
                 // directions
@@ -439,6 +446,9 @@
                     let indent
                     if(command.type == "fcall") {
                         indent = 1
+                        if (command.id == "drop_line_by_two") {
+                            console.log("dropper")
+                        }
                     }
                     else {
                         indent = state.code.indent_level() + 1
@@ -778,7 +788,8 @@
                         return c == " " || c == "\t"
                     }
                     // changed from jumps to stack implementation
-                    let spaces = state.code.unparsed.map((line) => {
+                    let spaces = state.code.unparsed.map((raw_line) => {
+                        line = raw_line.replaceAll("\t", constants.tab_space_string)
                         let sps = 0
                         while(sps < line.length && is_space(line[sps])) {
                             sps++
@@ -1377,7 +1388,7 @@
                 }
 
                 let ta1 = document.getElementById("ta1")
-                ta1.style.tabSize = "2"
+                ta1.style.tabSize = "" + constants.tab_size
                 ta1.onkeydown = function(e) {
                     if (e.key == "Tab") {
                         e.preventDefault()
@@ -1686,7 +1697,7 @@
         <table id="tab1" style="width:100%;height:100%">
             <tbody><tr>
                 <td id="td1" width="16%">
-                    <textarea id="ta1" style="width: 100%; height: 100%; display: block;" onblur="blurs()" onfocus="edit_code()" onchange="change_code()"></textarea>
+                    <textarea id="ta1" onblur="blurs()" onfocus="edit_code()" onchange="change_code()"></textarea>
                 </td>
                 <td>
                     <div id="canvas_holder">
