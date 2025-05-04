@@ -1,5 +1,7 @@
 # Offline Karel extended
 
+### You can [try offline karel](https://coproductional.com/oli/offline_karel3.html) on coproductional.com
+
 ![image](https://github.com/user-attachments/assets/feb8d596-149f-40a0-956a-6aa3207709d6)
 
 Adding challenges to offline karel.
