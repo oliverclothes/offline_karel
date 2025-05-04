@@ -1,8 +1,10 @@
-Offline Karel extended.
+# Offline Karel extended
 
-Trying to add challenges to offline karel.
+![image](https://github.com/user-attachments/assets/feb8d596-149f-40a0-956a-6aa3207709d6)
 
-Many bugs present. Just putting this initial commit in to make it public.
+Adding challenges to offline karel.
+
+Many bugs discovered and present. One possibly from nested loops? Might try to fix them eventually.
 
 ### Sorting Challenge Partial Solution
 
