@@ -9,7 +9,15 @@
                 overflow-wrap: normal;
                 overflow-x: scroll;
             }
+            #canvas_holder {
+                overflow: hidden;
+            }
             canvas {
+                float:right;
+                width:99%;
+                /* height:100%; */
+                border:2px solid #000000;
+
                 image-rendering: optimizeSpeed;
                 image-rendering: crisp-edges;
                 image-rendering: -moz-crisp-edges;
@@ -1155,7 +1163,12 @@
             }
             function click_box(col, row) {
                 let grid = state.field.grid.grid_data
-                if (settings.mouse_action == "add") {
+                let karel = state.field.karel
+                if (settings.mouse_action == "kmove") {
+                    karel.col = col
+                    karel.row = row
+                }
+                else if (settings.mouse_action == "add") {
                     grid[row][col] += 1
                 }
                 else if (settings.mouse_action == "toggle" && grid[row][col] > 0) {
@@ -1237,9 +1250,36 @@
 
                 canv.addEventListener('mousedown', function(e) {
                     const rect = canv.getBoundingClientRect()
-                    const col = Math.floor(cols * (e.clientX - rect.left) / rect.width)
-                    const row = Math.floor(rows * (rect.bottom - e.clientY) / rect.height)
-                    click_box(col, row)
+                    const col = cols * (e.clientX - rect.left) / rect.width
+                    const row = rows * (rect.bottom - e.clientY) / rect.height
+
+                    
+                    if (settings.mouse_action == "kturn") {
+                        let karel = state.field.karel
+                        let dx = col - karel.col - .5
+                        let dy = row - karel.row - .5
+                        if (Math.abs(dx) > Math.abs(dy)) {
+                            if (dx > 0) {
+                                karel.dir = constants.right
+                            }
+                            else {
+                                karel.dir = constants.left
+                            }
+                        }
+                        else {
+                            // positive y is up
+                            if (dy > 0) {
+                                karel.dir = constants.up
+                            }
+                            else {
+                                karel.dir = constants.down
+                            }
+                        }
+                        refresh()
+                    }
+                    else {
+                        click_box(Math.floor(col), Math.floor(row))
+                    }
                 })
 
                 // keypress everywhere but text area
@@ -1379,6 +1419,9 @@
                 
                 ta1.value = "# calls main\nmain()\n\ndef main():\n\tmove()"
                 change_code()
+
+                // there has to be a better way
+                window.addEventListener('mousemove', resize_canvas)
             }
 
             function update_ui_to_field() {
@@ -1561,10 +1604,29 @@
                     state.reset_state()
                 }
             }
+            function resize_canvas() {
+                const margins = 10
+                console.log("resizing the canvas")
+                const rect = document.getElementById("canvas_holder").getBoundingClientRect()
+                let h = Math.min(document.documentElement.clientHeight, rect.width)
+                if (rect.width / h > cols / rows) {
+                    // height limited
+                    canv.style.width = (h * cols / rows - margins) + "px"
+                    canv.style.height = (h - margins) + "px"
+                }
+                else {
+                    canv.style.width = (rect.width - margins) + "px"
+                    canv.style.height = (rect.width * rows / cols - margins) + "px"
+                }
+
+            }
             function change_style() {
                 style = styles[document.getElementById("style_switcher").value]
                 canv.width = style.imgw * cols
                 canv.height = style.imgh * rows
+                // canv.style.aspectRatio = cols + "/" + rows
+                resize_canvas()
+
                 ctx.fillStyle = style.bg
                 refresh()
             }
@@ -1627,7 +1689,9 @@
                     <textarea id="ta1" style="width: 100%; height: 100%; display: block;" onblur="blurs()" onfocus="edit_code()" onchange="change_code()"></textarea>
                 </td>
                 <td>
-                    <canvas id="canv1" width="1080" height="432" style="float:right;width:99%;height:100%;border:2px solid #000000;"></canvas>
+                    <div id="canvas_holder">
+                        <canvas id="canv1" width="1080" height="432"></canvas>
+                    </div>
                 </td>
             </tr>
         </tbody></table>
@@ -1671,12 +1735,15 @@
             <input type="number" id="col_field" name="col_field" onchange="change_cols()" min="1" max="100" value="7">
             <button onclick="load_state('start')">start state</button>
             <button onclick="load_state('end')">solution state</button>
+            <button id="run_button" onclick="state.controls.pause();state.controls.rewind();load_state('start');state.controls.play()" style="display: inline-block;">Run code</button>
 
         </div>
         <label for="mouse_action">Click to:</label>
         <select name="mouse_action" id="mouse_action" onchange="set_mouse_action()">
             <option value="toggle">toggle beeper</option>
             <option value="add">add beeper</option>
+            <option value="kmove">move karel</option>
+            <option value="kturn">turn karel</option>
         </select>
         <input type="checkbox" onchange="warning_toggle()" id="warn" name="warn" checked="">
         <label for="warn">Error popups</label>
