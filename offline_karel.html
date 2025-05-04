@@ -177,9 +177,48 @@
                 }
             }
 
+            const start_state = {
+                dims: [7, 4],
+                field: [
+                    "0000000",
+                    "0000000",
+                    "0000000",
+                    "0000000"
+                ],
+                karel: {
+                    col: 0,
+                    row: 0,
+                    dir: constants.right
+                }
+            }
             
             // challenges
             const challenges = {
+                "none" : [
+                    {
+                        dims: [6, 3],
+                        field0: [
+                            "000000",
+                            "000000",
+                            "000000"
+                        ],
+                        field1: [
+                            "000000",
+                            "000000",
+                            "000000"
+                        ],
+                        karel0: {
+                            col: 0,
+                            row: 0,
+                            dir: constants.right
+                        },
+                        karel1: {
+                            col: 0,
+                            row: 0,
+                            dir: constants.right
+                        }
+                    }
+                ],
                 "hospital" : [
                     {
                         dims: [15, 7],
@@ -335,18 +374,27 @@
                 )
             }
 
-            function parse_field_grid(cols, rows, field_grid_strings) {
+            // make it bigger to make it easily resizeable
+            function generate_field_grid(cols, rows, field_grid_strings) {
                 function wrapn(n, max) {
                     if (n < 0) {
                         return max + n
                     }
                     return n
                 }
-                let data = Array(rows)
+                let data = Array(constants.max_rows)
                 for (let row = 0; row < rows; row++) {
                     // invert vertical so that Karel stays on the bottom as the field size changes
                     data[row] = field_grid_strings[rows - row - 1].split("").map(c => c - '0')
+                    for (let col = cols; col < constants.max_cols; col++) {
+                        data[row].push(0)
+                    }
                 }
+                // let data = Array(rows)
+                // for (let row = 0; row < rows; row++) {
+                //     // invert vertical so that Karel stays on the bottom as the field size changes
+                //     data[row] = field_grid_strings[rows - row - 1].split("").map(c => c - '0')
+                // }
                 return {
                     cols: cols,
                     rows: rows,
@@ -359,11 +407,11 @@
                 return {
                     state0: setup_field(
                         obj.karel0,
-                        parse_field_grid(obj.dims[0], obj.dims[1], obj.field0)
+                        generate_field_grid(obj.dims[0], obj.dims[1], obj.field0)
                     ),
                     state1: setup_field(
                         obj.karel1,
-                        parse_field_grid(obj.dims[0], obj.dims[1], obj.field1)
+                        generate_field_grid(obj.dims[0], obj.dims[1], obj.field1)
                     )
                 }
             }
@@ -450,6 +498,20 @@
                             state.field.karel = JSON.parse(JSON.stringify(state.challenge_obj.state0.karel))
                         }
                         refresh()
+                    },
+                    field0: () => {
+                        state.field = state.initial_field()
+                        refresh()
+                    },
+                    field1: () => {
+                        if (state.challenge != "none") {
+                            state.field = JSON.parse(JSON.stringify(state.challenge_obj.state1))
+                            refresh()
+                        }
+                        else {
+                            console.log("ERROR 3214")
+                        }
+
                     },
                     reset_field: () => {
                         state.field = state.initial_field()
@@ -1332,32 +1394,49 @@
                 }
             }
 
+            // function load_field_state(dims, field, karel) {
+            //     cols = dims[0]
+            //     rows = dims[1]
+            //     data = JSON.parse(JSON.stringify(Array(constants.max_rows).fill(Array(constants.max_cols).fill(0))))
+            //     for (let row = 0; row < rows; row++) {
+            //         for (let col = 0; col < cols; col++) {
+            //             data[row][col] = state.field.grid.grid_data[row][col]
+            //         }
+            //     }
+            //     state.field.grid = {
+            //         cols: constants.max_cols,
+            //         rows: constants.max_rows,
+            //         grid_data: data
+            //     }
+            //     update_ui_to_field()
+            // }
+
+            // function resize_grid(dims) {
+
+            // }
+
             function set_challenge() {
                 let challenge = document.getElementById("challenge_switcher").value
                 state.challenge = challenge
                 if (challenge == "none") {
-                    data = JSON.parse(JSON.stringify(Array(constants.max_rows).fill(Array(constants.max_cols).fill(0))))
-                    for (let row = 0; row < rows; row++) {
-                        for (let col = 0; col < cols; col++) {
-                            data[row][col] = state.field.grid.grid_data[row][col]
-                        }
-                    }
-                    state.field.grid = {
-                        cols: constants.max_cols,
-                        rows: constants.max_rows,
-                        grid_data: data
-                    }
+                    //load_state(start_state.dims, start_state.field, start_state.karel)
+                    // juste enable column/row setting ui fields
+                    update_ui_to_field()
+
+                    // just copy current field
                 }
                 else {
                     state.challenge_obj = load_challenge(challenge)
                     state.reset_field()
                     let test = challenges[challenge][0]
-                    state.field = state.initial_field() // challenges[challenge][0])
 
                     // maybe cols and rows is if the grid displayed is different from the grid data?
                     // otherwise not in state variable?
                     cols = test.dims[0]
                     rows = test.dims[1]
+                    
+                    state.field0() // = state.initial_field() // challenges[challenge][0])
+
                     
                     refresh() // I guess refresh the field... or something?
                     // taken from setting col function
@@ -1529,6 +1608,17 @@
             function set_mouse_action() {
                 settings.mouse_action = document.getElementById("mouse_action").value
             }
+            function load_state(str) {
+                if (state.challenge == "none") {
+
+                }
+                else if (str == "start") {
+                    state.field0()
+                }
+                else if (str == "end") {
+                    state.field1()
+                }
+            }
             
         </script>
         <table id="tab1" style="width:100%;height:100%">
@@ -1564,21 +1654,25 @@
             <option value="frog">frog</option>
             <option value="monkey">monkey</option>
         </select>
-        
-        <select name="challenge_switcher" id="challenge_switcher" onchange="set_challenge()">
-            <option value="none">no challenge</option>
-            <option value="hospital">hospital</option>
-            <option value="spread">spread</option>
-            <option value="midpoint">midpoint</option>
-            <option value="sorter">sorter</option>
-        </select>
         <label for="fps_field">FPS</label>
         <input type="number" id="fps_field" name="fps_field" onchange="change_fps()" min="1" max="1000" value="30">
-        <label for="row_field">rows</label>
-        <input type="number" id="row_field" name="row_field" onchange="change_rows()" min="1" max="100" value="4">
-        <label for="col_field">cols</label>
-        <input type="number" id="col_field" name="col_field" onchange="change_cols()" min="1" max="100" value="7">
+        
+        <div id="challenger" style="overflow:none">
+            <select name="challenge_switcher" id="challenge_switcher" onchange="set_challenge()">
+                <option value="none">no challenge</option>
+                <option value="hospital">hospital</option>
+                <option value="spread">spread</option>
+                <option value="midpoint">midpoint</option>
+                <option value="sorter">sorter</option>
+            </select>
+            <label for="row_field">rows</label>
+            <input type="number" id="row_field" name="row_field" onchange="change_rows()" min="1" max="100" value="4">
+            <label for="col_field">cols</label>
+            <input type="number" id="col_field" name="col_field" onchange="change_cols()" min="1" max="100" value="7">
+            <button onclick="load_state('start')">start state</button>
+            <button onclick="load_state('end')">solution state</button>
 
+        </div>
         <label for="mouse_action">Click to:</label>
         <select name="mouse_action" id="mouse_action" onchange="set_mouse_action()">
             <option value="toggle">toggle beeper</option>
