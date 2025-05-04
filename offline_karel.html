@@ -476,6 +476,7 @@
                     code: {
                         unparsed: [],
                         parsed: [],
+                        errors: [],
                         timer: null,
                         timer_f: null,
                         initial_pos: -1,
@@ -788,11 +789,17 @@
                         return c == " " || c == "\t"
                     }
                     // changed from jumps to stack implementation
-                    let spaces = state.code.unparsed.map((raw_line) => {
-                        line = raw_line.replaceAll("\t", constants.tab_space_string)
+                    let spaces = state.code.unparsed.map((line) => {
+                        // does a kind  of tabs to spaces conversion to calculate indent
                         let sps = 0
-                        while(sps < line.length && is_space(line[sps])) {
-                            sps++
+                        while (sps < line.length && is_space(line[sps])) {
+                            if (line[sps] == "\t") {
+                                let extra = constants.tab_size - (sps % constants.tab_size)
+                                sps += extra
+                            }
+                            else {
+                                sps++
+                            }
                         }
                         return sps
                     })
@@ -821,6 +828,7 @@
                         return res + 1
                     }
                     state.code.parsed = []
+                    state.code.errors = []
                     state.code.fdefs = {}
                     for(let i = 0; i < state.code.unparsed.length; i++) {
                         let line = state.code.unparsed[i].trim()
@@ -884,6 +892,30 @@
                         }
                         res["indent"] = indents[i]
                         state.code.parsed.push(res)
+                        if (res.type == "error") {
+                            state.code.errors.push([i, line])
+                        }
+                    }
+
+                    // todo: find errors, like no indented code after a colon
+                    // and calling functions that don't exist
+
+                    // indent check
+                    let parsed = state.code.parsed
+                    for (let i = 0; i < parsed.length; i++) {
+                        if (parsed[i].type == "while" || parsed[i].type == "for" || parsed[i].type == "if" || parsed[i].type == "fdef") {
+                            let error = true
+                            let j
+                            for (j = i + 1; j < parsed.length && parsed[j].type == "noop"; j++) {
+                            }
+
+                            if (j == parsed.length) {
+                                state.code.errors.push([i, "no code after " + parsed[i].type])
+                            }
+                            else if (parsed[i].indent >= parsed[j].indent) {
+                                state.code.errors.push([i, "no indent after " + parsed[i].type])
+                            }
+                        }
                     }
                 }
                 function load_code(code) {
@@ -1549,8 +1581,34 @@
                 // rewrites text area
                 refresh()
             }
+            // function style_code(marker = -1) {
+            //     let errors = []
+            //     let res = []
+            //     for(let i = 0; i < state.code.unparsed.length; i++) {
+            //         if(i == marker) {
+            //             symbol = "> " //➡️
+            //         }
+            //         else if(state.code.parsed[i].type == "error") {
+            //             symbol = "X " //❌
+            //             errors.push([i + 1, state.code.unparsed[i]])
+            //         }
+            //         else {
+            //             symbol = "* " //🔹✅
+            //             // symbol = "* " //🔹
+            //         }
+            //         res.push(symbol + state.code.unparsed[i])
+            //     }
+            //     document.getElementById("ta1").value = res.join("\n")
+            //     state.code_styled = true
+
+            //     // maybe todo: maybe change a bit
+            //     if (errors.length > 0) {
+            //         let error_msg = errors.map(x => "Line " + x[0] + ": " + x[1]).join("<br>")
+            //         error(error_msg)
+            //     }
+
+            // }
             function style_code(marker = -1) {
-                let errors = []
                 let res = []
                 for(let i = 0; i < state.code.unparsed.length; i++) {
                     if(i == marker) {
@@ -1558,7 +1616,6 @@
                     }
                     else if(state.code.parsed[i].type == "error") {
                         symbol = "X " //❌
-                        errors.push([i + 1, state.code.unparsed[i]])
                     }
                     else {
                         symbol = "* " //🔹✅
@@ -1570,8 +1627,8 @@
                 state.code_styled = true
 
                 // maybe todo: maybe change a bit
-                if (errors.length > 0) {
-                    let error_msg = errors.map(x => "Line " + x[0] + ": " + x[1]).join("<br>")
+                if (state.code.errors.length > 0) {
+                    let error_msg = state.code.errors.map(x => "Line " + x[0] + ": " + x[1]).join("<br>")
                     error(error_msg)
                 }
 
