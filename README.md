@@ -1,18 +1,20 @@
 # Offline Karel extended
 
-### You can [try offline karel](https://coproductional.com/oli/offline_karel4.html) on coproductional.com
+### You can [try offline karel](https://coproductional.com/oli/offline_karel5.html) on coproductional.com
 
-![image](https://github.com/user-attachments/assets/feb8d596-149f-40a0-956a-6aa3207709d6)
+![image](https://github.com/user-attachments/assets/ab5db4a8-3a5c-41cc-8ff8-0f4aa127d745)
 
-Adding challenges to offline karel.
+Adding challenges to offline karel and extending its functionality.
 
-Many bugs discovered and present. One possibly from nested loops? Might try to fix them eventually.
+### Recent Changes
+
+Slightly improved the layout, added a "Run code" button that goes back to the start state and runs the code. Since the full controls are hard to understand.
 
 ### Fixed Crashing Bug (partially), Sorting Challenge Solved
 
 It turns out, when I added tabs, there was a bug when you had mixed tabs and spaces in your program.
 
-There still might kind of be... the solution is maybe not correct... And also... there should be error messages rather than crashing for improper indentation... But, basically, that's what causes the crash, improper indentation, which is hard to see when tabs and spaces are mixed.
+So I updated it to fix that...
 
 Here is a solution to the sort beeper piles problem:
 ```python
