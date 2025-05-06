@@ -2,13 +2,22 @@
 
 ### You can [try offline karel](https://coproductional.com/oli/offline_karel5.html) on coproductional.com
 
-![image](https://github.com/user-attachments/assets/ab5db4a8-3a5c-41cc-8ff8-0f4aa127d745)
+![image](https://github.com/user-attachments/assets/fc6525b6-f0ba-4343-ad1f-5fe2b2e1b7ff)
 
 Adding challenges to offline karel and extending its functionality.
 
 ### Recent Changes
 
-Slightly improved the layout, added a "Run code" button that goes back to the start state and runs the code. Since the full controls are hard to understand.
+* Football play pen: you can draw and run the code
+* Slightly improved the layout... still a bit bad, though. Need to fix mobile
+* Added a "Run code" button that goes back to the start state and runs the code. Since the full controls are hard to understand
+
+### Next Steps
+
+* Integrate more challenges
+* Maybe improve the look, add a legit Karel-looking skin
+* Maybe some kind of share functionality
+* Maybe some kind of collaborative thing... but would need to convert it to more client/server probably for that
 
 ### Fixed Crashing Bug (partially), Sorting Challenge Solved
 
