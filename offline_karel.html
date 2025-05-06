@@ -66,6 +66,7 @@
             let error_popup_on = true
 
             const constants = {
+                pen_size: 5,
                 tab_size: tab_size,
                 tab_space_string: Array(tab_size + 1).join(" "),
                 max_rows: 100,
@@ -470,6 +471,7 @@
                     return state.code.indent_stack[state.code.indent_stack.length - 1]
                 }
                 let state = {
+                    pen_points: [],
                     challenge: "none",
                     challenge_obj: null,
                     prev_tab: "history",
@@ -1249,6 +1251,38 @@
                     redo()
                 }
             }
+            function draw_points(ps) {
+                let temp = ctx.fillStyle
+                ctx.fillStyle = "black"
+                ctx.stroke
+                
+                ctx.beginPath()
+                //ctx.arc(x, y, constants.pen_size, 0, 2 * Math.PI)
+                for (let point of ps) {
+                        // convert from col/row to pixel
+                        let x = point[0] * canv.width / cols
+                        let y = (rows - point[1]) * canv.height / rows
+                        ctx.lineTo(x, y)
+
+                        
+                        // ctx.fillRect(25, 25, 100, 100)
+                        // ctx.fillRect(point[0], point[1], 100, 100)
+                        
+                    }
+                    ctx.stroke()
+                    ctx.fillStyle = temp
+            }
+            function redraw() {
+                ctx.fillRect(0, 0, canv.width, canv.height)
+                draw_grid()
+                draw_karel()
+                draw_beepers()
+                draw_numbers()
+
+                if (settings.mouse_action == "pen") {
+                    state.pen_points.forEach(draw_points)
+                }
+            }
             function refresh() {
                 let ta = document.getElementById("ta1")
                 let tab = document.getElementById("id_title").value
@@ -1258,11 +1292,7 @@
                 else if(tab == "code" && state.code_styled) {
                     style_code(state.code.pos)
                 }
-                ctx.fillRect(0, 0, canv.width, canv.height)
-                draw_grid()
-                draw_karel()
-                draw_beepers()
-                draw_numbers()
+                redraw()
             }
             function load_all_images() {
                 var counter = 0
@@ -1301,7 +1331,12 @@
                     const row = rows * (rect.bottom - e.clientY) / rect.height
 
                     
-                    if (settings.mouse_action == "kturn") {
+                    if (settings.mouse_action == "pen") {
+                        // pen points relative to dots on grid
+                        state.pen_points.push([[col, row]])
+                        draw_points([col, row])
+                    }
+                    else if (settings.mouse_action == "kturn") {
                         let karel = state.field.karel
                         let dx = col - karel.col - .5
                         let dy = row - karel.row - .5
@@ -1327,6 +1362,26 @@
                     else {
                         click_box(Math.floor(col), Math.floor(row))
                     }
+                })
+
+                canv.addEventListener('mouseup', function(e) {
+                    // if (state.pen_points.length > 1 && state.pen_points.slice(-1)[0] == []) {
+                    //     state.pen_points.pop()
+                    // }
+                })
+                canv.addEventListener('mousemove', function(e) {
+                    var flags = e.buttons !== undefined ? e.buttons : e.which
+                    primary_mouse_down = (flags & 1) === 1
+                    if (primary_mouse_down && settings.mouse_action == "pen") {
+                        const rect = canv.getBoundingClientRect()
+                        const col = cols * (e.clientX - rect.left) / rect.width
+                        const row = rows * (rect.bottom - e.clientY) / rect.height
+                        // pen points relative to dots on grid
+                        let top = state.pen_points.slice(-1)[0]
+                        top.push([col, row])
+                        draw_points(top)
+                    }
+
                 })
 
                 // keypress everywhere but text area
@@ -1742,6 +1797,15 @@
             }
             function set_mouse_action() {
                 settings.mouse_action = document.getElementById("mouse_action").value
+                
+                // if keeping old drawing
+                // redraw()
+                // but now just erasing everything
+                if (settings.mouse_action == "pen") {
+                    state.pen_points = []
+                }
+                // to erase pen points when turning off drawing
+                redraw()
             }
             function load_state(str) {
                 if (state.challenge == "none") {
@@ -1823,6 +1887,7 @@
             <option value="add">add beeper</option>
             <option value="kmove">move karel</option>
             <option value="kturn">turn karel</option>
+            <option value="pen">draw</option>
         </select>
         <input type="checkbox" onchange="warning_toggle()" id="warn" name="warn" checked="">
         <label for="warn">Error popups</label>
