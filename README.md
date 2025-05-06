@@ -1,5 +1,9 @@
 # Offline Karel extended
 
+Oh no... I just realized I broke everything. I don't really know how the code execution works.
+
+I might have to rewrite how code executes. It's a bit hacky right now.
+
 ### You can [try offline karel](https://coproductional.com/oli/offline_karel5.html) on coproductional.com
 
 ![image](https://github.com/user-attachments/assets/fc6525b6-f0ba-4343-ad1f-5fe2b2e1b7ff)
