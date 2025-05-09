@@ -2,7 +2,11 @@
 
 I am in the process of splitting this project into multiple files and cleaning up the code as much as I can.
 
-### You can [try offline karel, v1.0](https://coproductional.com/oli/ok_v1.html) on coproductional.com
+We'll see what happens. I actually broke it for a few days or a week. When I added support for tabs... the indentation broke.
+
+Now you need to write code in a main function, that's the only way that it works.
+
+### You can [try offline karel, v1.1](https://coproductional.com/oli/ok_v1.1.html) on coproductional.com
 
 ![image](https://github.com/user-attachments/assets/fc6525b6-f0ba-4343-ad1f-5fe2b2e1b7ff)
 
