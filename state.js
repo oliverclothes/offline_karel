@@ -342,7 +342,7 @@ function setup_state() {
 
 		},
 		reset_field: () => {
-			state.field = state.field0
+			state.field = state.field0()
 		},
 		field_matches: (field) => {
 			return JSON.stringify(field) == JSON.stringify(state.field)
