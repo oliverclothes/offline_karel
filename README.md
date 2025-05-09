@@ -10,7 +10,15 @@ I might have to rewrite how code executes. It's a bit hacky right now.
 
 Adding challenges to offline karel and extending its functionality.
 
-### Recent Changes
+### No Longer Single Development File
+
+The code is getting a bit long... over 1,000 lines in the HTML file... so splitting into multiple files, an HTML, a CSS, and there will be a few JS files.
+
+But will have "releases" where basically, just glue together the files into one HTML file.
+
+This is not strictly necessary, but I will also do a rewrite of the code execution, because there is currently a bug (that I probably just introduced recently), and having smaller, more easily understood files, will help me fix the problem.
+
+### Other Recent Changes
 
 * Football play pen: you can draw and run the code
 * Slightly improved the layout... still a bit bad, though. Need to fix mobile
