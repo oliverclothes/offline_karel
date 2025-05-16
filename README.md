@@ -1,4 +1,18 @@
-# Offline Karel extended
+# This is Going Away Soon
+
+Github is *requiring* me to setup 2FA. Maybe because I linked to an external unlisted website? But I do not use 2FA for security reasons. One time I used it, and my phone broke. I lost all access to the 2FA accounts without notice or any way to fix the problem. I cannot in good conscience tell people to go to account links that I could completely lose access to at any time.
+
+I actually broke the running code due to a couple changes... without completely understanding how it works. I was going to rewrite the code... but two reasons why I decided not to:
+1. Due to Github's 2FA requirement, this account will be deleted
+2. Based on the traffic numbers, not many people check out this project anyway
+
+I guess I will think about what to do in my spare time. I might not do as much open-source stuff on my own... since I don't think it gets any traffic. But if any projects wants a contributor, I could contribute to any project that has a few people interested.
+
+If you want a working version, go back to the old version of the code. Or you could actually just copy in the code execution code from that into the version now and it would probably work, while retaining the added features. That is what I probably would have done this weekend, or next week, if this 2FA issue didn't come up. Or a complete rewrite. That was actually more what I planned. And maybe record a video of me doing it.
+
+Anyway, good luck to anyone from code in place.
+
+## Offline Karel extended
 
 I am in the process of splitting this project into multiple files and cleaning up the code as much as I can.
 
